@@ -29,7 +29,6 @@ public class HdfsClient {
 			String line;
 			int nbOfLines = 0;
 			while ((line = br.readLine()) != null) {
-				line.length();
 				nbOfLines++;
 				list.add(new KV(Integer.toString(nbOfLines), line));
 			}
