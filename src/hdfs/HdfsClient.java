@@ -2,6 +2,7 @@ package hdfs;
 
 public class HdfsClient {
 	
+	@SuppressWarnings("unused")
 	private static void usage() {
 		System.out.println("Usage: java HdfsClient read <file>");
 		System.out.println("Usage: java HdfsClient write <txt|kv> <file>");
