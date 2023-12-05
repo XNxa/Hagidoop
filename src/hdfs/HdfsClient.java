@@ -17,7 +17,9 @@ import interfaces.KV;
 
 public class HdfsClient {
 
-	public final static int HDFS_WRITE = 0; 
+	public final static int HDFS_WRITE = 0;
+	public final static int HDFS_READ = 1;
+	public final static int HDFS_DELETE = 2;
 	
 	private static void usage() {
 		System.out.println("Usage: java HdfsClient read <file>");
@@ -82,6 +84,7 @@ public class HdfsClient {
 	}
 
 	public static void HdfsRead(String fname) {
+			
 	}
 
 	public static void main(String[] args) {

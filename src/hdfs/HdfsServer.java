@@ -66,6 +66,8 @@ public class HdfsServer {
                         ObjectInputStream obj_is = new ObjectInputStream(is);
                         String filename = (String) obj_is.readObject();
                         
+                        // TODO : Changer le lieu de sauvegarde pour le 
+                        // mettre dans tmp
                         FileWriter file = new FileWriter(filename);
 
                         for (int i = 0; i < size; i++) {
