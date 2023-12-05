@@ -84,7 +84,18 @@ public class HdfsClient {
 	}
 
 	public static void HdfsRead(String fname) {
-			
+		Config config = new Config();
+		int nbOfWorkers = config.getNumberOfWorkers();
+
+		// Flag
+
+		// Nom du fichier a demander sans le _i
+
+		// Recoit num du fragement
+
+		// Recoit le fragement
+
+
 	}
 
 	public static void main(String[] args) {
