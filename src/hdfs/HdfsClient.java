@@ -1,11 +1,10 @@
 package hdfs;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -18,7 +17,7 @@ import interfaces.KV;
 
 public class HdfsClient {
 
-	private final static int HDFS_WRITE = 0; 
+	public final static int HDFS_WRITE = 0; 
 	
 	private static void usage() {
 		System.out.println("Usage: java HdfsClient read <file>");
@@ -51,24 +50,33 @@ public class HdfsClient {
 		int nbOfKvs = list.size();
 		int nbOfWorkers = config.getNumberOfWorkers();
 		int sizeOfFragment = nbOfKvs / nbOfWorkers;
-		
+
 		int i = 0;;
 		for (Machine machine : config) {
+			boolean last = i==config.getNumberOfWorkers()-1;
+
 			// Ouvrir une socket
 			try (Socket s = new Socket(machine.getIp(), machine.getPort())) {
 				OutputStream os = s.getOutputStream();
 				// Envoyer un flag HDFS_WRITE
 				os.write(HDFS_WRITE);
+				// Envoyer la taille du fragement
+				os.write(last? sizeOfFragment + nbOfKvs%nbOfWorkers : sizeOfFragment); 
 				// Envoyer nom fichier + n° Fragment
-				os.write(fname+"_"+(i++));
-				// TODO: Finish that
-			
-			} catch (IOException e) {
-				System.err.println();
-			}
+				ObjectOutputStream obj_os = new ObjectOutputStream(os);
+				obj_os.writeObject(fname+"_"+(i));
+				// Envoyer la sauce
+				int borneSup = (last) ? nbOfKvs : (i+1)*(sizeOfFragment);
+				for (int j = i * sizeOfFragment; j < borneSup ; j++) {
+					obj_os.writeObject(list.get(j));
+				}
 
-			// Envoyer la taille du fragement
-			// Envoyer la sauce
+				obj_os.close();
+				os.close();
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+			}
+			i++;
 		}
 
 	}

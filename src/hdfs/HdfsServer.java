@@ -1,8 +1,13 @@
 package hdfs;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import interfaces.KV;
 
 /** Serveur Hdfs, dont plusieurs instances seront lancés sur plusieurs machines
 différentes. */
@@ -53,8 +58,42 @@ public class HdfsServer {
 
         @Override
         public void run() {
-            // TODO unimplemented method stub
+            try {
+                InputStream is = s.getInputStream();
+                switch (is.read()) {
+                    case HdfsClient.HDFS_WRITE:
+                        int size = is.read();
+                        ObjectInputStream obj_is = new ObjectInputStream(is);
+                        String filename = (String) obj_is.readObject();
+                        
+                        FileWriter file = new FileWriter(filename);
+
+                        for (int i = 0; i < size; i++) {
+                            file.write(((KV) obj_is.readObject()).toString());
+                        }
+
+                        file.close();
+                        obj_is.close();
+                        is.close();
+                        break;
+
+
+                    default:
+                        is.close();
+                        break;
+                }
+
+
+            } catch (ClassNotFoundException e) {
+                System.err.println("Class of a serialized object cannot be found.");
+            } catch (IOException e) {
+                for (StackTraceElement et : e.getStackTrace()) {
+                    System.err.println(et.toString());
+                }
+            }
         }
+
+
     }
 
 }
