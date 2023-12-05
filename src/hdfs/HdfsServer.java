@@ -1,12 +1,15 @@
 package hdfs;
 
+import java.io.File;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import config.Project;
 import interfaces.KV;
 
 /** Serveur Hdfs, dont plusieurs instances seront lancés sur plusieurs machines
@@ -48,6 +51,7 @@ public class HdfsServer {
 
         /** Socket accepté par le serveur. */
         private Socket s;
+        
 
         /* Construire  un esclave à partir d'un socket accepté par le serveur.
          * @param s : socket accepté par le serveur.
@@ -58,13 +62,15 @@ public class HdfsServer {
 
         @Override
         public void run() {
+            ObjectInputStream obj_is;
+            String filename;
             try {
                 InputStream is = s.getInputStream();
                 switch (is.read()) {
                     case HdfsClient.HDFS_WRITE:
                         int size = is.read();
-                        ObjectInputStream obj_is = new ObjectInputStream(is);
-                        String filename = (String) obj_is.readObject();
+                        obj_is = new ObjectInputStream(is);
+                        filename = (String) obj_is.readObject();
                         
                         // TODO : Changer le lieu de sauvegarde pour le 
                         // mettre dans tmp
@@ -79,7 +85,26 @@ public class HdfsServer {
                         is.close();
                         break;
 
+                    case HdfsClient.HDFS_READ:
+                        obj_is = new ObjectInputStream(is);
+                        filename = (String) obj_is.readObject();
 
+                        // Récupérer le fichier
+                        File f = new File(Project.PATH_HDFS);
+                        File[] matchingFiles = f.listFiles(new FilenameFilter() {
+                            public boolean accept(File dir, String name) {
+                                return name.startsWith(filename);
+                            }
+                        });
+                        if (matchingFiles.length < 1) {
+                            // TODO : envoyer flag ?
+                        } else if (matchingFiles.length > 1) {
+                            // TODO : evoyer flag ?
+                        } else {
+                            // TODO : envoyer flag ?
+
+                            // envoyer le fichier.
+                        }
                     default:
                         is.close();
                         break;
@@ -89,9 +114,7 @@ public class HdfsServer {
             } catch (ClassNotFoundException e) {
                 System.err.println("Class of a serialized object cannot be found.");
             } catch (IOException e) {
-                for (StackTraceElement et : e.getStackTrace()) {
-                    System.err.println(et.toString());
-                }
+                e.printStackTrace();
             }
         }
 
