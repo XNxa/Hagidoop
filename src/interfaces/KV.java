@@ -7,7 +7,6 @@ public class KV implements Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 
 	public static final String SEPARATOR = "<->";
-	public static final String INTERNAL_SEPARTOR = "::";
 	
 	public String k;
 	public String v;
@@ -21,7 +20,7 @@ public class KV implements Serializable, Cloneable {
 	}
 
 	public String toString() {
-		return  k + INTERNAL_SEPARTOR + v ;
+		return "KV [k=" + k + ", v=" + v + "]";
 	}
 	
 	public Object clone() {
