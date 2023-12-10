@@ -1,80 +1,119 @@
 package hdfs;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.LinkedList;
 
 import interfaces.FileReaderWriter;
 import interfaces.KV;
 
 public class KVFileReaderWriter implements FileReaderWriter {
 
+    public static final String READ_MODE = "READ";
+    public static final String WRITE_MODE = "WRITE";
+
     private String fname;
     private long index;
-    private KV[] kvs;
-    private FileWriter infile;
+    private String mode;
+    private FileWriter wfile;
+    private FileReader rfile;
 
-    public KVFileReaderWriter(String filename) throws FileFormatException {
-        
-        // TODO: Change that because array to big
-        /* fname = filename;
-        try (BufferedReader file = new BufferedReader(new FileReader(fname))) {
-            String line;
-            int lineNumber = 0;
-            LinkedList<KV> kv = new LinkedList<KV>();
-            while ((line = file.readLine()) != null) {
-                lineNumber++;
-                String[] kvFromThisLine = line.split(KV.SEPARATOR);
-                for (String kvStr : kvFromThisLine) {
-                    if (!kvStr.matches("KV [k=.*, v=.*]")) {
-                        throw new FileFormatException(kvStr, lineNumber);
-                    } else {
-                        // Extract key and value
-                        kvStr.replace("KV [k=", "");
-                        kvStr.replace(", v=", "");
-                        kvStr.replace("]", "");
-                        String[] kAndV = kvStr.split(",");
-                        String key = kAndV[0];
-                        String value = kAndV[1];
-                        // Add the KV to the array
-                        kv.add(new KV(key, value));
-                    }
-                }
-            }
-            // Add kv to kvs
-            kvs = kv.toArray(new KV[0]);
-        } catch (FileNotFoundException e) {
-            kvs = new KV[0];
-        } catch (IOException e) {
-            System.err.println("An error occured while reading file : " + filename);
-            e.printStackTrace();
-        } */
+    public KVFileReaderWriter(String filename) {
+        this.fname = filename;
+        this.index = 0;
     }
 
     @Override
     public KV read() {
-        return kvs[0];
+        try (BufferedReader buf = new BufferedReader(rfile)) {
+            StringBuilder kvStr = new StringBuilder("");
+            char[] ch = new char[1];
+            while (!kvStr.toString().matches("KV \\[k=.*, v=.*\\]")) {
+                if (kvStr.toString().equals(KV.SEPARATOR)) {
+                    kvStr = new StringBuilder("");
+                }
+                if (buf.read(ch, 0, 1) == -1) {
+                    return null;
+                } else {
+                    kvStr.append(ch[0]);
+                }
+            }
+            this.index++;
+            return extractKVfromString(kvStr.toString());
+        } catch (IOException e) {
+            System.err.println("Couldn't read file " + this.fname);
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
     public void write(KV record) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'write'");
+        try {
+            wfile.append(record.toString()+KV.SEPARATOR);
+        } catch (IOException e) {
+            System.err.println("Unabled to append to file :" + fname);
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void open(String mode) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'open'");
+        if (mode.equals(READ_MODE)) {
+            this.mode = mode;
+            try {
+                rfile = new FileReader(fname);
+            } catch (FileNotFoundException e) {
+                System.err.println("File Not Found " + fname);
+                e.printStackTrace();
+            }
+        } else if (mode.equals(WRITE_MODE)) {
+            this.mode = mode;
+            File f = new File(fname);
+            if (!f.exists()) {
+                try {
+                    f.createNewFile();
+                } catch (IOException e) {
+                    System.err.println("Coudn't create new file : " + fname);
+                    e.printStackTrace();
+                }
+            }
+
+            try {
+                wfile = new FileWriter(f);
+            } catch (IOException e) {
+                System.err.println("IO Error with file " + fname);
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     public void close() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'close'");
+        switch (mode) {
+            case READ_MODE:
+                try {
+                    rfile.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                break;
+            case WRITE_MODE:
+                try {
+                    wfile.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                break;
+            default:
+                break;
+        }
+        this.index = 0;
     }
 
     @Override
@@ -92,20 +131,15 @@ public class KVFileReaderWriter implements FileReaderWriter {
         this.fname = fname;
     }
 
-    private KV extractKVfromString(String kvStr, int lineNumber) throws FileFormatException {
-        if (!kvStr.matches("KV [k=.*, v=.*]")) {
-            throw new FileFormatException(kvStr, lineNumber);
-        } else {
-            // Extract key and value
-            kvStr.replace("KV [k=", "");
-            kvStr.replace(", v=", "");
-            kvStr.replace("]", "");
-            String[] kAndV = kvStr.split(",");
-            String key = kAndV[0];
-            String value = kAndV[1];
-            // Add the KV to the array
-            return new KV(key, value);
-        }
+    private KV extractKVfromString(String kvStr) {
+        String s = kvStr;
+        s.replace("KV [k=", "");
+        s.replace(", v=", "");
+        s.replace("]", "");
+        String[] kAndV = s.split(",");
+        String key = kAndV[0];
+        String value = kAndV[1];
+        return new KV(key, value);
     }
     
 }

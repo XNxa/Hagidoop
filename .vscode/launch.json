@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "testKVReadWrite",
+            "request": "launch",
+            "mainClass": "testKVReadWrite",
+            "projectName": "hagidoop-new"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"
