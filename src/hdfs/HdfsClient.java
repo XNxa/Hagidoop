@@ -1,6 +1,7 @@
 package hdfs;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,6 +15,8 @@ import config.Config;
 import config.Machine;
 import interfaces.FileReaderWriter;
 import interfaces.KV;
+import io.KVFileReaderWriter;
+import io.TxtFileReaderWriter;
 
 public class HdfsClient {
 
@@ -31,6 +34,24 @@ public class HdfsClient {
 	}
 	
 	public static void HdfsWrite(int fmt, String fname) {
+		// TODO: Chopper la taille du fichier et faire des envoi eu serveurs au fur et a mesure
+		File file = new File(fname);
+		long lengthOfFile = file.length();
+		
+		Config config = new Config();
+		int nbOfWorkers = config.getNumberOfWorkers();
+		
+		long stopSending = lengthOfFile / nbOfWorkers;
+		
+		FileReaderWriter rw = (fmt == FileReaderWriter.FMT_KV) ? new KVFileReaderWriter(fname) : new TxtFileReaderWriter(fname);
+		rw.open(TxtFileReaderWriter.READ_MODE);
+
+		long bytesRead = 0L;
+		while (bytesRead < stopSending) {
+			// TODO ...!
+		}
+
+
 		List<KV> list = new LinkedList<KV>();
 		try (BufferedReader br = new BufferedReader(new FileReader(fname))) {
 			String line;
@@ -47,10 +68,8 @@ public class HdfsClient {
 			System.exit(1);
 		}
 
-		Config config = new Config();
 
 		int nbOfKvs = list.size();
-		int nbOfWorkers = config.getNumberOfWorkers();
 		int sizeOfFragment = nbOfKvs / nbOfWorkers;
 
 		int i = 0;;

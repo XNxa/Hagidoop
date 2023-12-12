@@ -1,4 +1,4 @@
-package hdfs;
+package io;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,41 +10,36 @@ import java.io.IOException;
 import interfaces.FileReaderWriter;
 import interfaces.KV;
 
-public class KVFileReaderWriter implements FileReaderWriter {
+public class TxtFileReaderWriter implements FileReaderWriter {
 
     public static final String READ_MODE = "READ";
     public static final String WRITE_MODE = "WRITE";
 
     private String fname;
-    private long index;
     private String mode;
+    private BufferedReader brfile;
     private FileWriter wfile;
-    private FileReader rfile;
+    private int index;
 
-    public KVFileReaderWriter(String filename) {
+    public TxtFileReaderWriter(String filename) {
         this.fname = filename;
-        this.index = 0;
+    }
+
+    public long size(KV kv) {
+        return (long) (kv.v).length();
     }
 
     @Override
     public KV read() {
-        try (BufferedReader buf = new BufferedReader(rfile)) {
-            StringBuilder kvStr = new StringBuilder("");
-            char[] ch = new char[1];
-            while (!kvStr.toString().matches("KV \\[k=.*, v=.*\\]")) {
-                if (kvStr.toString().equals(KV.SEPARATOR)) {
-                    kvStr = new StringBuilder("");
-                }
-                if (buf.read(ch, 0, 1) == -1) {
-                    return null;
-                } else {
-                    kvStr.append(ch[0]);
-                }
+        String line;
+        try {
+            if ((line = brfile.readLine()) != null) {
+                return new KV(Integer.toString(index++), line.toString());
+            } else {
+                return null;
             }
-            this.index++;
-            return extractKVfromString(kvStr.toString());
         } catch (IOException e) {
-            System.err.println("Couldn't read file " + this.fname);
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return null;
@@ -53,19 +48,20 @@ public class KVFileReaderWriter implements FileReaderWriter {
     @Override
     public void write(KV record) {
         try {
-            wfile.append(record.toString()+KV.SEPARATOR);
+            wfile.append(record.v + '\n');
         } catch (IOException e) {
-            System.err.println("Unabled to append to file :" + fname);
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
     @Override
     public void open(String mode) {
+        index = 0;
         if (mode.equals(READ_MODE)) {
             this.mode = mode;
             try {
-                rfile = new FileReader(fname);
+                brfile = new BufferedReader(new FileReader(fname));
             } catch (FileNotFoundException e) {
                 System.err.println("File Not Found " + fname);
                 e.printStackTrace();
@@ -96,7 +92,7 @@ public class KVFileReaderWriter implements FileReaderWriter {
         switch (mode) {
             case READ_MODE:
                 try {
-                    rfile.close();
+                    brfile.close();
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -113,7 +109,6 @@ public class KVFileReaderWriter implements FileReaderWriter {
             default:
                 break;
         }
-        this.index = 0;
     }
 
     @Override
@@ -131,15 +126,4 @@ public class KVFileReaderWriter implements FileReaderWriter {
         this.fname = fname;
     }
 
-    private KV extractKVfromString(String kvStr) {
-        String s = kvStr;
-        s.replace("KV [k=", "");
-        s.replace(", v=", "");
-        s.replace("]", "");
-        String[] kAndV = s.split(",");
-        String key = kAndV[0];
-        String value = kAndV[1];
-        return new KV(key, value);
-    }
-    
 }
