@@ -11,6 +11,8 @@ import java.net.Socket;
 
 import config.Project;
 import interfaces.KV;
+import io.KVFileReaderWriter;
+import io.SizedFileReaderWriter;
 
 /** Serveur Hdfs, dont plusieurs instances seront lancés sur plusieurs machines
 différentes. */
@@ -62,31 +64,29 @@ public class HdfsServer {
 
         @Override
         public void run() {
-            ObjectInputStream obj_is;
             String filename;
             try {
-                InputStream is = s.getInputStream();
-                switch (is.read()) {
+                ObjectInputStream obj_is = new ObjectInputStream(s.getInputStream());
+                switch (obj_is.readInt()) {
                     case HdfsClient.HDFS_WRITE:
-                        int size = is.read();
-                        obj_is = new ObjectInputStream(is);
                         filename = (String) obj_is.readObject();
                         
                         // TODO : Changer le lieu de sauvegarde pour le 
                         // mettre dans tmp
-                        FileWriter file = new FileWriter(filename);
+                        KVFileReaderWriter file = new KVFileReaderWriter(filename);
+                        file.open(SizedFileReaderWriter.WRITE_MODE);
 
-                        for (int i = 0; i < size; i++) {
-                            file.write(((KV) obj_is.readObject()).toString());
+                        KV kv;
+                        while ((kv = (KV) obj_is.readObject()) != null) {
+                            file.write(kv);
                         }
 
                         file.close();
                         obj_is.close();
-                        is.close();
+                        
                         break;
 
                     case HdfsClient.HDFS_READ:
-                        obj_is = new ObjectInputStream(is);
                         filename = (String) obj_is.readObject();
 
                         // Récupérer le fichier
@@ -106,7 +106,7 @@ public class HdfsServer {
                             // envoyer le fichier.
                         }
                     default:
-                        is.close();
+                        
                         break;
                 }
 

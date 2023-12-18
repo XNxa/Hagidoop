@@ -1,21 +1,15 @@
 package hdfs;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.util.LinkedList;
-import java.util.List;
 
 import config.Config;
 import config.Machine;
 import interfaces.FileReaderWriter;
 import interfaces.KV;
 import io.KVFileReaderWriter;
+import io.SizedFileReaderWriter;
 import io.TxtFileReaderWriter;
 
 public class HdfsClient {
@@ -34,72 +28,54 @@ public class HdfsClient {
 	}
 	
 	public static void HdfsWrite(int fmt, String fname) {
-		// TODO: Chopper la taille du fichier et faire des envoi eu serveurs au fur et a mesure
-		File file = new File(fname);
-		long lengthOfFile = file.length();
-		
+
+		// Recuperer le nombre de machines
 		Config config = new Config();
-		int nbOfWorkers = config.getNumberOfWorkers();
-		
-		long stopSending = lengthOfFile / nbOfWorkers;
-		
-		FileReaderWriter rw = (fmt == FileReaderWriter.FMT_KV) ? new KVFileReaderWriter(fname) : new TxtFileReaderWriter(fname);
-		rw.open(TxtFileReaderWriter.READ_MODE);
 
-		long bytesRead = 0L;
-		while (bytesRead < stopSending) {
-			// TODO ...!
-		}
+		int nbOfServer = config.getNumberOfWorkers();
 
+		// Recuperer la taille du fichier
+		File file = new File(fname);
+		long sizeOfFile = file.length();
 
-		List<KV> list = new LinkedList<KV>();
-		try (BufferedReader br = new BufferedReader(new FileReader(fname))) {
-			String line;
-			int nbOfLines = 0;
-			while ((line = br.readLine()) != null) {
-				nbOfLines++;
-				list.add(new KV(Integer.toString(nbOfLines), line));
-			}
-		} catch (FileNotFoundException e) {
-			System.err.println("File " + fname + " not found !");
-			System.exit(1);
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			System.exit(1);
-		}
+		// Diviser la taille par le nombre de machine
+		long threshold = sizeOfFile / nbOfServer;
 
+		// Ouvrir le fichier
+		SizedFileReaderWriter rw = (fmt == FileReaderWriter.FMT_KV) ? 
+			new KVFileReaderWriter(fname) : new TxtFileReaderWriter(fname);
 
-		int nbOfKvs = list.size();
-		int sizeOfFragment = nbOfKvs / nbOfWorkers;
+		rw.open(SizedFileReaderWriter.READ_MODE);
 
-		int i = 0;;
-		for (Machine machine : config) {
-			boolean last = i==config.getNumberOfWorkers()-1;
+		// Pour chaque machine
+		int i = 0;
+		for (Machine m : config) {
+			// Se connecter
+			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
+				ObjectOutputStream os = 
+					new ObjectOutputStream(serverSocket.getOutputStream());
 
-			// Ouvrir une socket
-			try (Socket s = new Socket(machine.getIp(), machine.getPort())) {
-				OutputStream os = s.getOutputStream();
-				// Envoyer un flag HDFS_WRITE
-				os.write(HDFS_WRITE);
-				// Envoyer la taille du fragement
-				os.write(last? sizeOfFragment + nbOfKvs%nbOfWorkers : sizeOfFragment); 
-				// Envoyer nom fichier + n° Fragment
-				ObjectOutputStream obj_os = new ObjectOutputStream(os);
-				obj_os.writeObject(fname+"_"+(i));
-				// Envoyer la sauce
-				int borneSup = (last) ? nbOfKvs : (i+1)*(sizeOfFragment);
-				for (int j = i * sizeOfFragment; j < borneSup ; j++) {
-					obj_os.writeObject(list.get(j));
+				os.writeInt(i);
+				os.writeObject(fname + "_" + i);
+
+				long bytesSent = 0L;
+				KV kv = null;
+				// Tant qu'on ne depasse pas le seuil on envoi des kv
+				while (bytesSent < threshold || i == nbOfServer - 1 && kv != null ) {
+					kv = rw.read();
+					bytesSent += rw.size(kv);
+					os.writeObject(kv);
 				}
 
-				obj_os.close();
+				os.writeObject(null);
 				os.close();
-			} catch (IOException e) {
-				System.err.println(e.getMessage());
-			}
-			i++;
-		}
 
+			} catch (Exception e) {
+				// TODO: Valentin ... ???
+	
+			i++;
+			}
+		}
 	}
 
 	public static void HdfsRead(String fname) {
