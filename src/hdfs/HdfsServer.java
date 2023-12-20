@@ -1,5 +1,6 @@
 package hdfs;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -75,10 +76,16 @@ public class HdfsServer {
                         file.open(SizedFileReaderWriter.WRITE_MODE);
 
                         KV kv;
-                        while ((kv = (KV) obj_is.readObject()) != null) {
-                            file.write(kv);
+                        while (true) {
+                            try {
+                                kv = (KV) obj_is.readObject();
+                                System.err.println(kv);
+                                if (kv == null) {break;}
+                                file.write(kv);
+                            } catch (EOFException e) {
+                                break;
+                            }
                         }
-
                         file.close();
                         obj_is.close();
                         

@@ -46,7 +46,6 @@ public class HdfsClient {
 			new KVFileReaderWriter(fname) : new TxtFileReaderWriter(fname);
 
 		rw.open(SizedFileReaderWriter.READ_MODE);
-
 		// Pour chaque machine
 		int i = 0;
 		for (Machine m : config) {
@@ -55,7 +54,7 @@ public class HdfsClient {
 				ObjectOutputStream os = 
 					new ObjectOutputStream(serverSocket.getOutputStream());
 
-				os.writeInt(i);
+				os.writeInt(HDFS_WRITE);
 				os.writeObject(fname + "_" + i);
 
 				long bytesSent = 0L;
@@ -72,9 +71,8 @@ public class HdfsClient {
 
 			} catch (Exception e) {
 				// TODO: Valentin ... ???
-	
-			i++;
 			}
+			i++;
 		}
 	}
 

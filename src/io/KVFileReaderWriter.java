@@ -22,7 +22,7 @@ public class KVFileReaderWriter implements SizedFileReaderWriter {
     }
 
     public long size(KV kv) {
-        return (long) (kv.toString()).length();
+        return (long) (kv.toString()).length()+3;
     }
 
     @Override
@@ -133,13 +133,15 @@ public class KVFileReaderWriter implements SizedFileReaderWriter {
     private KV extractKVfromString(String kvStr) {
         String s = kvStr;
         s = s.replace("KV [k=", "");
-        s = s.replace(", v=", ",");
+        s = s.replace(", v=", "MONSEP@R@T€URDEOUF");
         s = s.replace("]", "");
-        String[] kAndV = s.split(",");
+        String[] kAndV = s.split("MONSEP@R@T€URDEOUF");
         String key = kAndV[0];
         String value = "";
         if (kAndV.length == 2) {
             value = kAndV[1];
+        } else {
+            System.err.println("feur");
         }
         return new KV(key, value);
     }

@@ -8,8 +8,8 @@ public class testKVReadWrite {
     
     public static void main(String[] args) {
         
-        TxtFileReaderWriter txtrw = new TxtFileReaderWriter("bonjour.txt");
-        KVFileReaderWriter kvrw = new KVFileReaderWriter("salut.txt");
+        TxtFileReaderWriter txtrw = new TxtFileReaderWriter("puceauMoi.txt");
+        KVFileReaderWriter kvrw = new KVFileReaderWriter("puceauMoi.kv");
 
         txtrw.open(TxtFileReaderWriter.READ_MODE);
         kvrw.open(KVFileReaderWriter.WRITE_MODE);
@@ -22,7 +22,9 @@ public class testKVReadWrite {
         txtrw.close();
         kvrw.close();
 
-        txtrw = new TxtFileReaderWriter("bonjour2.txt");
+        kvrw = new KVFileReaderWriter("puceauMoi.kv");
+        txtrw = new TxtFileReaderWriter("puceauMoireconstructed.txt");
+
         txtrw.open(TxtFileReaderWriter.WRITE_MODE);
         kvrw.open(KVFileReaderWriter.READ_MODE);
         
@@ -32,7 +34,5 @@ public class testKVReadWrite {
 
         txtrw.close();
         kvrw.close();
-
     }
-
 }
