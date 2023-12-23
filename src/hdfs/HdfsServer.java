@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -92,6 +93,10 @@ public class HdfsServer {
                         break;
 
                     case HdfsClient.HDFS_READ:
+                        ObjectOutputStream obj_os =
+                            new ObjectOutputStream(s.getOutputStream());
+
+                        // Recevoir le nom du fichier
                         filename = (String) obj_is.readObject();
 
                         // Récupérer le fichier
@@ -102,16 +107,32 @@ public class HdfsServer {
                             }
                         });
                         if (matchingFiles.length < 1) {
-                            // TODO : envoyer flag ?
-                        } else if (matchingFiles.length > 1) {
-                            // TODO : evoyer flag ?
-                        } else {
-                            // TODO : envoyer flag ?
+                            // TODO : envoyer erreur ?
 
-                            // envoyer le fichier.
+                        } else if (matchingFiles.length > 1) {
+                            // TODO : envoyer erreur ?
+
+                        } else {
+                            String fnameWithFragmentNumber = matchingFiles[0].getName();
+
+                            // Envoyer le numéro de fragment
+                            String[] nameSplit = fnameWithFragmentNumber.split("_");
+                            if (nameSplit.length < 1) {
+                                // TODO : envoyer erreur ?
+                            } else {
+                                int fragmentNumber = Integer.parseInt(nameSplit[nameSplit.length -1]);
+                                obj_os.writeInt(fragmentNumber);
+                            }
+
+
+                            // Envoyer le fragment. 
+                            // TODO : on a potentiellement plus personne pour lire, il se passe quoi dans ce cas ?
+                            // Envoie sous quelle forme ? des KVs ? des lignes directement ?
+                                                         
+
+
                         }
                     default:
-                        
                         break;
                 }
 

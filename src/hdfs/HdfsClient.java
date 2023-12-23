@@ -1,8 +1,12 @@
 package hdfs;
 
+import java.io.EOFException;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 import config.Config;
 import config.Machine;
@@ -77,17 +81,50 @@ public class HdfsClient {
 	}
 
 	public static void HdfsRead(String fname) {
+		// Recuperer la congiguration
 		Config config = new Config();
-		int nbOfWorkers = config.getNumberOfWorkers();
 
-		// Flag
+		// Recevoir les fragments dans l'ordre.
 
-		// Nom du fichier a demander sans le _i
+		for (int i = 0 ; i < config.getNumberOfWorkers() ; i++ ) {
+			for (Machine m : config) {
+			
+				try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
+					ObjectOutputStream os = 
+						new ObjectOutputStream(serverSocket.getOutputStream());
 
-		// Recoit num du fragement
+					ObjectInputStream is = 
+						new ObjectInputStream(serverSocket.getInputStream());
 
-		// Recoit le fragement
+						
+					// Envoyer le nom du fichier
+					os.writeObject(fname);
+						
+					// Recevoir le numéro de fragment
+					int fragment_number = is.readInt();
 
+					if (fragment_number == i) {
+
+						// Recevoir le fragment
+						while (true) {
+							// TODO : recevoir le fichier, sous quellle forme ? des kv ? des lignes directement ?
+							break;
+						}
+						os.close();
+						is.close();
+						break; // On peut sortir de la boucle de recherche du fragment courant, et passer au fragment suivant.
+					}
+
+					os.close();
+					is.close();;
+
+				} catch (UnknownHostException e) {
+					System.err.println(e.getMessage());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 	}
 
