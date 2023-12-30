@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 
 import config.Project;
 import interfaces.KV;
@@ -65,6 +66,9 @@ public class HdfsServer {
         @Override
         public void run() {
             String filename;
+            File[] matchingFiles;
+            File path = new File(Project.PATH_HDFS);
+
             try {
                 ObjectInputStream obj_is = new ObjectInputStream(s.getInputStream());
                 switch (obj_is.readInt()) {
@@ -80,7 +84,6 @@ public class HdfsServer {
                         while (true) {
                             try {
                                 kv = (KV) obj_is.readObject();
-                                System.err.println(kv);
                                 if (kv == null) {break;}
                                 file.write(kv);
                             } catch (EOFException e) {
@@ -100,8 +103,7 @@ public class HdfsServer {
                         filename = (String) obj_is.readObject();
 
                         // Récupérer le fichier
-                        File f = new File(Project.PATH_HDFS);
-                        File[] matchingFiles = f.listFiles(new FilenameFilter() {
+                        matchingFiles = path.listFiles(new FilenameFilter() {
                             public boolean accept(File dir, String name) {
                                 return name.startsWith(filename);
                             }
@@ -132,11 +134,35 @@ public class HdfsServer {
 
 
                         }
+                        obj_os.close();
+                    case HdfsClient.HDFS_DELETE:
+                        String fname = (String) obj_is.readObject();
+                        System.err.println("Looking for " + fname + " in: " + path);
+
+                        matchingFiles = path.listFiles(new FilenameFilter() {
+                            public boolean accept(File dir, String name) {
+                                return name.toLowerCase().startsWith(fname.toLowerCase());
+                            }
+                        });
+
+                        System.err.println("Matching files: " + Arrays.toString(matchingFiles));
+
+                        if (matchingFiles == null || matchingFiles.length < 1) {
+                            // TODO: Envoyer une erreur ?
+                        } else if (matchingFiles.length > 1) {
+                            // TODO: Envoyer une erreur ?
+                        } else {
+                            File fileToDelete = matchingFiles[0];
+                            boolean deleted = fileToDelete.delete();
+                            if (!deleted) {
+                                // TODO: Gérer l'échec de la suppression
+                            }
+                        }
+
                     default:
                         break;
                 }
-
-
+                obj_is.close();
             } catch (ClassNotFoundException e) {
                 System.err.println("Class of a serialized object cannot be found.");
             } catch (IOException e) {

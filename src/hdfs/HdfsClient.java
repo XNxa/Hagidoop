@@ -29,6 +29,20 @@ public class HdfsClient {
 	}
 	
 	public static void HdfsDelete(String fname) {
+		// Recuperer la configuration
+		Config config = new Config();
+
+		for (Machine m : config) {
+			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
+				ObjectOutputStream os = 
+					new ObjectOutputStream(serverSocket.getOutputStream());
+					os.writeInt(HDFS_DELETE);
+				os.writeObject(fname);
+				os.close();
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+		}
 	}
 	
 	public static void HdfsWrite(int fmt, String fname) {
