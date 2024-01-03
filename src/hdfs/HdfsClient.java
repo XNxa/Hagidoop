@@ -1,6 +1,5 @@
 package hdfs;
 
-import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -36,7 +35,7 @@ public class HdfsClient {
 			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
 				ObjectOutputStream os = 
 					new ObjectOutputStream(serverSocket.getOutputStream());
-					os.writeInt(HDFS_DELETE);
+				os.writeInt(HDFS_DELETE);
 				os.writeObject(fname);
 				os.close();
 			} catch (Exception e) {

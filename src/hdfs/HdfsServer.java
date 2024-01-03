@@ -68,6 +68,9 @@ public class HdfsServer {
             String filename;
             File[] matchingFiles;
             File path = new File(Project.PATH_HDFS);
+            if (!path.exists()) {
+                path.mkdir();
+            }
 
             try {
                 ObjectInputStream obj_is = new ObjectInputStream(s.getInputStream());
@@ -75,9 +78,7 @@ public class HdfsServer {
                     case HdfsClient.HDFS_WRITE:
                         filename = (String) obj_is.readObject();
                         
-                        // TODO : Changer le lieu de sauvegarde pour le 
-                        // mettre dans tmp
-                        KVFileReaderWriter file = new KVFileReaderWriter(filename);
+                        KVFileReaderWriter file = new KVFileReaderWriter(path.getAbsolutePath()+File.separator+filename);
                         file.open(SizedFileReaderWriter.WRITE_MODE);
 
                         KV kv;
@@ -137,7 +138,7 @@ public class HdfsServer {
                         obj_os.close();
                     case HdfsClient.HDFS_DELETE:
                         String fname = (String) obj_is.readObject();
-                        System.err.println("Looking for " + fname + " in: " + path);
+                        System.out.println("Looking for " + fname + " in: " + path);
 
                         matchingFiles = path.listFiles(new FilenameFilter() {
                             public boolean accept(File dir, String name) {
