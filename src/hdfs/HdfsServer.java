@@ -66,6 +66,7 @@ public class HdfsServer {
         @Override
         public void run() {
             String filename;
+            ObjectOutputStream os;
             File[] matchingFiles;
             File path = new File(Project.PATH_HDFS);
             if (!path.exists()) {
@@ -73,10 +74,10 @@ public class HdfsServer {
             }
 
             try {
-                ObjectInputStream obj_is = new ObjectInputStream(s.getInputStream());
-                switch (obj_is.readInt()) {
+                ObjectInputStream is = new ObjectInputStream(s.getInputStream());
+                switch (is.readInt()) {
                     case HdfsClient.HDFS_WRITE:
-                        filename = (String) obj_is.readObject();
+                        filename = (String) is.readObject();
                         
                         KVFileReaderWriter file = new KVFileReaderWriter(path.getAbsolutePath()+File.separator+filename);
                         file.open(SizedFileReaderWriter.WRITE_MODE);
@@ -84,7 +85,7 @@ public class HdfsServer {
                         KV kv;
                         while (true) {
                             try {
-                                kv = (KV) obj_is.readObject();
+                                kv = (KV) is.readObject();
                                 if (kv == null) {break;}
                                 file.write(kv);
                             } catch (EOFException e) {
@@ -92,16 +93,13 @@ public class HdfsServer {
                             }
                         }
                         file.close();
-                        obj_is.close();
-                        
+                        is.close();
                         break;
 
                     case HdfsClient.HDFS_READ:
-                        ObjectOutputStream obj_os =
-                            new ObjectOutputStream(s.getOutputStream());
-
+                        os = new ObjectOutputStream(s.getOutputStream());
                         // Recevoir le nom du fichier
-                        filename = (String) obj_is.readObject();
+                        filename = (String) is.readObject();
 
                         // Récupérer le fichier
                         matchingFiles = path.listFiles(new FilenameFilter() {
@@ -124,7 +122,7 @@ public class HdfsServer {
                                 // TODO : envoyer erreur ?
                             } else {
                                 int fragmentNumber = Integer.parseInt(nameSplit[nameSplit.length -1]);
-                                obj_os.writeInt(fragmentNumber);
+                                os.writeInt(fragmentNumber);
                             }
 
 
@@ -132,38 +130,44 @@ public class HdfsServer {
                             // TODO : on a potentiellement plus personne pour lire, il se passe quoi dans ce cas ?
                             // Envoie sous quelle forme ? des KVs ? des lignes directement ?
                                                          
-
+                            os.close();
+                            is.close();
 
                         }
-                        obj_os.close();
+                        break;
                     case HdfsClient.HDFS_DELETE:
-                        String fname = (String) obj_is.readObject();
+                        os = new ObjectOutputStream(s.getOutputStream());
+
+                        String fname = (String) is.readObject();
                         System.out.println("Looking for " + fname + " in: " + path);
 
                         matchingFiles = path.listFiles(new FilenameFilter() {
                             public boolean accept(File dir, String name) {
-                                return name.toLowerCase().startsWith(fname.toLowerCase());
+                                return name.startsWith(fname);
                             }
                         });
 
                         System.err.println("Matching files: " + Arrays.toString(matchingFiles));
-
+                        
                         if (matchingFiles == null || matchingFiles.length < 1) {
-                            // TODO: Envoyer une erreur ?
-                        } else if (matchingFiles.length > 1) {
-                            // TODO: Envoyer une erreur ?
-                        } else {
+                            os.writeInt(-1);
+                        } else { // On a un ou plusieurs fragments sur la machine
                             File fileToDelete = matchingFiles[0];
                             boolean deleted = fileToDelete.delete();
                             if (!deleted) {
-                                // TODO: Gérer l'échec de la suppression
+                                os.writeInt(-2);
+                            } else {
+                                os.writeInt(0);
                             }
+                            is.close();
                         }
-
+                        break;
                     default:
                         break;
                 }
-                obj_is.close();
+                
+                
+                s.close();
             } catch (ClassNotFoundException e) {
                 System.err.println("Class of a serialized object cannot be found.");
             } catch (IOException e) {

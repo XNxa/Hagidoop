@@ -35,11 +35,37 @@ public class HdfsClient {
 			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
 				ObjectOutputStream os = 
 					new ObjectOutputStream(serverSocket.getOutputStream());
+				
+
 				os.writeInt(HDFS_DELETE);
 				os.writeObject(fname);
+
+				ObjectInputStream is = 
+					new ObjectInputStream(serverSocket.getInputStream());
+				/* Recevoir un flag : 
+					0 -> OK
+					-1 -> fichier non trouvé 
+					-2 -> delete impossible
+				 */
+				int flag = is.readInt();
+				switch (flag) {
+					case 0:
+						System.out.println("Succesfully deleted the file " + fname + ".");
+						break;
+					case -1:
+						System.err.println("File not found.");
+						break;
+					case -2:
+						System.err.println("Delete not possible.");
+					default:
+						break;
+				}
+				is.close();
 				os.close();
+				serverSocket.close();
 			} catch (Exception e) {
 				// TODO: handle exception
+				e.printStackTrace();
 			}
 		}
 	}
