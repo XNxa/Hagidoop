@@ -113,20 +113,20 @@ public class HdfsServer {
                         System.err.println("Matching files: " + Arrays.toString(matchingFiles));
                         
                         if (matchingFiles == null || matchingFiles.length < 1) {
-                            //os.writeInt(-1);
-                            // TODO
+                            os.writeInt(-1);
                         } else { // On a un ou plusieurs fragments sur la machine
                             // Envoyer le numéro de fragment du premier fichier trouvé.
                             File f = matchingFiles[0];
                             String[] nameSplit = f.getName().split("_");
                             int fragmentNumber = Integer.parseInt(nameSplit[nameSplit.length-1]);
-                            System.out.println("got fragment " + fragmentNumber);
                             
-
-                            // Envoyer le fragment.
+                            // Envoyer le numéro du fragment.
                             System.out.println("Sending fragment number " + fragmentNumber);
+                            os.writeInt(fragmentNumber);
                             KVFileReaderWriter reader = new KVFileReaderWriter(f.getAbsolutePath());
                             reader.open(SizedFileReaderWriter.READ_MODE);
+
+                            // Envoyer le fragment.
                             while ((kv = reader.read()) != null) {
                                 os.writeObject(kv);
                             }

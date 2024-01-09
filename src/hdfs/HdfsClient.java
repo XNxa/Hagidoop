@@ -127,42 +127,41 @@ public class HdfsClient {
 		// Recevoir les fragments dans l'ordre.
 		KVFileReaderWriter writer = new KVFileReaderWriter(fname);
 		writer.open(SizedFileReaderWriter.WRITE_MODE);
-		System.out.println("writer opend");
 		int i = 0;
+
 		for (Machine m : config) {
-			System.out.println("it n°" + i + ", machine " + m.toString());
 			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
-				System.out.println("connected to the machine");
+
 				ObjectOutputStream os = 
 					new ObjectOutputStream(serverSocket.getOutputStream());
-
-				System.out.println("os up");
 
 
 				// Envoyer le flag
 				os.writeInt(HDFS_READ);	
-				System.out.println("flag sent");
 
 				// Envoyer le nom du fichier
 				os.writeObject(fname + "_" + i++);
 				
 				ObjectInputStream is = 
 					new ObjectInputStream(serverSocket.getInputStream());
-				System.out.println("is up");
 				
-				
-				// Recevoir le fragment
-				KV kv;
-				while (true) {
-					System.out.println("reading)");
-					try {
-						kv = (KV) is.readObject();
-						if (kv == null) {break;}
-						writer.write(kv);
-					} catch (EOFException e) {
-						break;
+				int flag = is.readInt();
+				if (flag == -1) {
+					System.err.println("File not found");
+				} else {
+					// Recevoir le fragment
+					KV kv;
+					while (true) {
+						try {
+							kv = (KV) is.readObject();
+							if (kv == null) {break;}
+							writer.write(kv);
+						} catch (EOFException e) {
+							break;
+						}
 					}
 				}
+				
 
 				os.close();
 				is.close();
