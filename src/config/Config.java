@@ -14,7 +14,7 @@ import java.util.zip.DataFormatException;
 public class Config implements Iterable<Machine> {
 
     private static final String CONFIG_FOLDER = "config";
-    private static final String CONFIG_FILE = "config1";
+    private static final String CONFIG_FILE = "ssh";
     private static final String PATH = CONFIG_FOLDER + File.separator + CONFIG_FILE;
 
     private List<Machine> machines;

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="bash deploy_write.sh <config path>"
+usage="bash deploy_write.sh <config path> <kv|txt> <file>  "
 
 
 IFS=':'
@@ -20,9 +20,15 @@ while read -r line; do
         echo "java -cp bin hdfs.HdfsServer $port &> $logs" | bash &
     else
         # TODO: start ssh connection, launch the server.
-        echo "ssh $machine "java -cp /home/vmouttea/annee2/PDR/bin hdfs.HdfsServer $port" &> $logs" | bash &
+        echo "Can't launch on another machine with SSH for the moment...! Only use localhost"
     fi
 
 done < $1
 
+java -cp bin hdfs.HdfsClient write $2 $3
 
+for i in "${ports[@]}"
+do
+    # echo $i
+    `fuser -k $i/tcp` &> /dev/null
+done 
