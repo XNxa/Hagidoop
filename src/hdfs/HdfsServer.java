@@ -11,9 +11,11 @@ import java.net.Socket;
 import java.util.Arrays;
 
 import config.Project;
+import interfaces.FileReaderWriter;
 import interfaces.KV;
 import io.KVFileReaderWriter;
 import io.SizedFileReaderWriter;
+import io.TxtFileReaderWriter;
 
 /** Serveur Hdfs, dont plusieurs instances seront lancés sur plusieurs machines
 différentes. */
@@ -65,10 +67,11 @@ public class HdfsServer {
 
         @Override
         public void run() {
-            String filename;
+            String fname;
             ObjectOutputStream os;
             File[] matchingFiles;
             File path = new File(Project.PATH_HDFS);
+            KV kv;
             if (!path.exists()) {
                 path.mkdir();
             }
@@ -77,12 +80,12 @@ public class HdfsServer {
                 ObjectInputStream is = new ObjectInputStream(s.getInputStream());
                 switch (is.readInt()) {
                     case HdfsClient.HDFS_WRITE:
-                        filename = (String) is.readObject();
+                        fname = (String) is.readObject();
                         
-                        KVFileReaderWriter file = new KVFileReaderWriter(path.getAbsolutePath()+File.separator+filename);
+                        KVFileReaderWriter file = new KVFileReaderWriter(path.getAbsolutePath()+File.separator+fname);
                         file.open(SizedFileReaderWriter.WRITE_MODE);
 
-                        KV kv;
+                        
                         while (true) {
                             try {
                                 kv = (KV) is.readObject();
@@ -93,52 +96,48 @@ public class HdfsServer {
                             }
                         }
                         file.close();
-                        is.close();
                         break;
 
                     case HdfsClient.HDFS_READ:
                         os = new ObjectOutputStream(s.getOutputStream());
-                        // Recevoir le nom du fichier
-                        filename = (String) is.readObject();
 
-                        // Récupérer le fichier
+                        fname = (String) is.readObject();
+                        System.out.println("Looking for " + fname + " in: " + path);
+
                         matchingFiles = path.listFiles(new FilenameFilter() {
                             public boolean accept(File dir, String name) {
-                                return name.startsWith(filename);
+                                return name.startsWith(fname);
                             }
                         });
-                        if (matchingFiles.length < 1) {
-                            // TODO : envoyer erreur ?
 
-                        } else if (matchingFiles.length > 1) {
-                            // TODO : envoyer erreur ?
+                        System.err.println("Matching files: " + Arrays.toString(matchingFiles));
+                        
+                        if (matchingFiles == null || matchingFiles.length < 1) {
+                            //os.writeInt(-1);
+                            // TODO
+                        } else { // On a un ou plusieurs fragments sur la machine
+                            // Envoyer le numéro de fragment du premier fichier trouvé.
+                            File f = matchingFiles[0];
+                            String[] nameSplit = f.getName().split("_");
+                            int fragmentNumber = Integer.parseInt(nameSplit[nameSplit.length-1]);
+                            System.out.println("got fragment " + fragmentNumber);
+                            
 
-                        } else {
-                            String fnameWithFragmentNumber = matchingFiles[0].getName();
-
-                            // Envoyer le numéro de fragment
-                            String[] nameSplit = fnameWithFragmentNumber.split("_");
-                            if (nameSplit.length < 1) {
-                                // TODO : envoyer erreur ?
-                            } else {
-                                int fragmentNumber = Integer.parseInt(nameSplit[nameSplit.length -1]);
-                                os.writeInt(fragmentNumber);
+                            // Envoyer le fragment.
+                            System.out.println("Sending fragment number " + fragmentNumber);
+                            KVFileReaderWriter reader = new KVFileReaderWriter(f.getAbsolutePath());
+                            reader.open(SizedFileReaderWriter.READ_MODE);
+                            while ((kv = reader.read()) != null) {
+                                os.writeObject(kv);
                             }
-
-
-                            // Envoyer le fragment. 
-                            // TODO : on a potentiellement plus personne pour lire, il se passe quoi dans ce cas ?
-                            // Envoie sous quelle forme ? des KVs ? des lignes directement ?
-                                                         
-                            os.close();
-                            is.close();
-
+                            reader.close();
                         }
+                        os.close();
                         break;
                     case HdfsClient.HDFS_DELETE:
                         os = new ObjectOutputStream(s.getOutputStream());
 
-                        String fname = (String) is.readObject();
+                        fname = (String) is.readObject();
                         System.out.println("Looking for " + fname + " in: " + path);
 
                         matchingFiles = path.listFiles(new FilenameFilter() {
@@ -159,14 +158,14 @@ public class HdfsServer {
                             } else {
                                 os.writeInt(0);
                             }
-                            is.close();
                         }
+                        os.close();
                         break;
                     default:
                         break;
                 }
                 
-                
+                is.close();
                 s.close();
             } catch (ClassNotFoundException e) {
                 System.err.println("Class of a serialized object cannot be found.");

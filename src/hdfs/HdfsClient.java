@@ -1,5 +1,6 @@
 package hdfs;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -124,48 +125,59 @@ public class HdfsClient {
 		Config config = new Config();
 
 		// Recevoir les fragments dans l'ordre.
+		KVFileReaderWriter writer = new KVFileReaderWriter(fname);
+		writer.open(SizedFileReaderWriter.WRITE_MODE);
+		System.out.println("writer opend");
+		int i = 0;
+		for (Machine m : config) {
+			System.out.println("it n°" + i + ", machine " + m.toString());
+			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
+				System.out.println("connected to the machine");
+				ObjectOutputStream os = 
+					new ObjectOutputStream(serverSocket.getOutputStream());
 
-		for (int i = 0 ; i < config.getNumberOfWorkers() ; i++ ) {
-			for (Machine m : config) {
-			
-				try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
-					ObjectOutputStream os = 
-						new ObjectOutputStream(serverSocket.getOutputStream());
+				System.out.println("os up");
 
-					ObjectInputStream is = 
-						new ObjectInputStream(serverSocket.getInputStream());
 
-						
-					// Envoyer le nom du fichier
-					os.writeObject(fname);
-						
-					// Recevoir le numéro de fragment
-					int fragment_number = is.readInt();
+				// Envoyer le flag
+				os.writeInt(HDFS_READ);	
+				System.out.println("flag sent");
 
-					if (fragment_number == i) {
-
-						// Recevoir le fragment
-						while (true) {
-							// TODO : recevoir le fichier, sous quellle forme ? des kv ? des lignes directement ?
-							break;
-						}
-						os.close();
-						is.close();
-						break; // On peut sortir de la boucle de recherche du fragment courant, et passer au fragment suivant.
+				// Envoyer le nom du fichier
+				os.writeObject(fname + "_" + i++);
+				
+				ObjectInputStream is = 
+					new ObjectInputStream(serverSocket.getInputStream());
+				System.out.println("is up");
+				
+				
+				// Recevoir le fragment
+				KV kv;
+				while (true) {
+					System.out.println("reading)");
+					try {
+						kv = (KV) is.readObject();
+						if (kv == null) {break;}
+						writer.write(kv);
+					} catch (EOFException e) {
+						break;
 					}
-
-					os.close();
-					is.close();;
-
-				} catch (UnknownHostException e) {
-					System.err.println(e.getMessage());
-				} catch (IOException e) {
-					e.printStackTrace();
 				}
+
+				os.close();
+				is.close();
+
+			} catch (UnknownHostException e) {
+				System.err.println(e.getMessage());
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
 			}
 		}
-
+		writer.close();
 	}
+
 
 	public static void main(String[] args) {
 		// java HdfsClient <read|write> <txt|kv> <file>
