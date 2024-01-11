@@ -9,17 +9,22 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 
 import interfaces.FileReaderWriter;
 import interfaces.Map;
 import interfaces.NetworkReaderWriter;
 
-public class WorkerImpl implements Worker {
+public class WorkerImpl extends UnicastRemoteObject implements Worker {
+
+    protected WorkerImpl() throws RemoteException {
+        super();
+        //TODO Auto-generated constructor stub
+    }
 
     @Override
     public void runMap(Map m, FileReaderWriter reader, NetworkReaderWriter writer) throws RemoteException {
-        // 
-
+        System.out.println("Hello !");;
     }
 
     public static void main(String[] args) {
@@ -30,12 +35,13 @@ public class WorkerImpl implements Worker {
             try {
                 Registry registry = LocateRegistry.createRegistry(port);
                 Worker w = new WorkerImpl();
-                Naming.rebind("//" + InetAddress.getLocalHost().getHostName(), w);
+                Naming.rebind("//" + InetAddress.getLocalHost().getHostName() +
+                ":" + port + "/HagidoopWorker", w);
                 
             } catch (NumberFormatException e) {
                 usage();
             } catch (RemoteException e) {
-                
+                e.printStackTrace();
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
