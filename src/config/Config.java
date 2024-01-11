@@ -13,6 +13,7 @@ import java.util.zip.DataFormatException;
 
 public class Config implements Iterable<Machine> {
 
+
     private static final String CONFIG_FOLDER = "config";
     private static final String CONFIG_FILE = "ssh";
     private static final String PATH = CONFIG_FOLDER + File.separator + CONFIG_FILE;
@@ -28,10 +29,10 @@ public class Config implements Iterable<Machine> {
             while ((line = br.readLine()) != null) {
                 i++;
                 tab = line.split(":");
-                if (tab.length != 2) {
+                if (tab.length != 3) {
                     throw new DataFormatException("Bad format line " + i + " : " + line);
                 }
-                machines.add(new Machine(tab[0], Integer.parseInt(tab[1])));
+                machines.add(new Machine(tab[0], Integer.parseInt(tab[1]), Integer.parseInt(tab[2])));
             }
         } catch (NumberFormatException e) {
             System.err.println("Config file with wrong format");

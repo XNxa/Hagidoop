@@ -33,7 +33,7 @@ public class HdfsClient {
 		Config config = new Config();
 
 		for (Machine m : config) {
-			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
+			try (Socket serverSocket = new Socket(m.getIp(), m.getPortHdfs())) {
 				ObjectOutputStream os = 
 					new ObjectOutputStream(serverSocket.getOutputStream());
 				
@@ -94,7 +94,7 @@ public class HdfsClient {
 		int i = 0;
 		for (Machine m : config) {
 			// Se connecter
-			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
+			try (Socket serverSocket = new Socket(m.getIp(), m.getPortHdfs())) {
 				ObjectOutputStream os = 
 					new ObjectOutputStream(serverSocket.getOutputStream());
 
@@ -130,7 +130,7 @@ public class HdfsClient {
 		int i = 0;
 
 		for (Machine m : config) {
-			try (Socket serverSocket = new Socket(m.getIp(), m.getPort())) {
+			try (Socket serverSocket = new Socket(m.getIp(), m.getPortHdfs())) {
 
 				ObjectOutputStream os = 
 					new ObjectOutputStream(serverSocket.getOutputStream());
