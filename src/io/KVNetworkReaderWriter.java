@@ -137,5 +137,6 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
         } else {
             throw new UnsupportedOperationException("You can't use the method closeClient on a client.");
         }
-    }    
+    }
+    
 }

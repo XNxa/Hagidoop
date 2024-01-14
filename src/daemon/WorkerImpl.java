@@ -6,10 +6,10 @@ import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 import interfaces.FileReaderWriter;
+import interfaces.KV;
 import interfaces.Map;
 import interfaces.NetworkReaderWriter;
 
@@ -17,14 +17,35 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker {
 
     protected WorkerImpl() throws RemoteException {
         super();
-        //TODO Auto-generated constructor stub
     }
 
     @Override
     public void runMap(Map m, FileReaderWriter reader, NetworkReaderWriter writer) throws RemoteException {
-        System.out.println("Starting map on this node");
-        m.map(reader, writer);
-        System.out.println("Map finished");
+        new Slave(m, reader, writer).start();
+    }
+
+    private class Slave extends Thread {
+        Map m;
+        FileReaderWriter reader;
+        NetworkReaderWriter writer;
+
+        public Slave (Map m, FileReaderWriter reader, NetworkReaderWriter writer) {
+            this.m = m;            
+            this.reader = reader;
+            this.writer = writer;            
+        }
+        
+        @Override
+        public void run() {
+            System.out.println("Starting map on this node");
+            m.map(reader, writer);
+            System.out.println("Map finished");
+            
+            // Close the writer and the reader
+            reader.close();
+            writer.write(new KV("acca", "caca"));
+            writer.closeClient();
+        }
     }
 
     public static void main(String[] args) {

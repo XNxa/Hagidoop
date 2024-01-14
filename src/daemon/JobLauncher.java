@@ -10,9 +10,7 @@ import config.Machine;
 import interfaces.MapReduce;
 import interfaces.NetworkReaderWriter;
 import io.KVFileReaderWriter;
-import io.KVNetworkReaderWriter;
 import io.SizedFileReaderWriter;
-import io.TxtFileReaderWriter;
 
 public class JobLauncher {
 
@@ -21,6 +19,10 @@ public class JobLauncher {
 		// Create writer of the results
 		KVFileReaderWriter resultsWriter = new KVFileReaderWriter("results_" + fname);
 		resultsWriter.open(SizedFileReaderWriter.WRITE_MODE);
+
+		Adapter tube = new Adapter();
+
+		
 
 		// lancer les map en appelant runmap sur les workers
 		Config config = new Config();
@@ -35,22 +37,19 @@ public class JobLauncher {
 				KVFileReaderWriter reader = new KVFileReaderWriter(fname + "_" + i++);
 				reader.open(SizedFileReaderWriter.READ_MODE);
 
-				KVNetworkReaderWriter writer = new KVNetworkReaderWriter(, i)
+				NetworkReaderWriter writer = tube.getAdapterEntry();
 
 				// Run the remote method
 				w.runMap(mr, reader, writer);
 
-				// Close the writer and the reader
-				reader.close();
-				writer.closeClient();
 			} catch (MalformedURLException | RemoteException | NotBoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 
-	// Close the writer of the results
-	resultsWriter.close();
+		// Close the writer of the results
+		resultsWriter.close();
 	}
 
 }

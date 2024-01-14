@@ -13,7 +13,6 @@ import java.util.zip.DataFormatException;
 
 public class Config implements Iterable<Machine> {
 
-
     private static final String CONFIG_FOLDER = "config";
     private static final String CONFIG_FILE = "test";
     private static final String PATH = CONFIG_FOLDER + File.separator + CONFIG_FILE;
