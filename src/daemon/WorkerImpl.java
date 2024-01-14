@@ -1,9 +1,7 @@
 package daemon;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -24,7 +22,9 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker {
 
     @Override
     public void runMap(Map m, FileReaderWriter reader, NetworkReaderWriter writer) throws RemoteException {
-        System.out.println("Hello !");;
+        System.out.println("Starting map on this node");
+        m.map(reader, writer);
+        System.out.println("Map finished");
     }
 
     public static void main(String[] args) {
@@ -33,7 +33,7 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker {
         } else {
             int port = Integer.parseInt(args[0]); //
             try {
-                Registry registry = LocateRegistry.createRegistry(port);
+                LocateRegistry.createRegistry(port);
                 Worker w = new WorkerImpl();
                 Naming.rebind("//" + InetAddress.getLocalHost().getHostName() +
                 ":" + port + "/HagidoopWorker", w);
