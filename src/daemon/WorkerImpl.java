@@ -43,7 +43,7 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker {
             
             // Close the writer and the reader
             reader.close();
-            writer.write(new KV("acca", "caca"));
+            writer.write(null);
             writer.closeClient();
         }
     }

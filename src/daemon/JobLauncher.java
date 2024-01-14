@@ -1,5 +1,6 @@
 package daemon;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -7,6 +8,7 @@ import java.rmi.RemoteException;
 
 import config.Config;
 import config.Machine;
+import config.Project;
 import interfaces.MapReduce;
 import interfaces.NetworkReaderWriter;
 import io.KVFileReaderWriter;
@@ -22,8 +24,6 @@ public class JobLauncher {
 
 		Adapter tube = new Adapter();
 
-		
-
 		// lancer les map en appelant runmap sur les workers
 		Config config = new Config();
 		int i = 0;
@@ -34,7 +34,7 @@ public class JobLauncher {
 				Worker w = (Worker) Naming.lookup(URL);
 
 				// Open the reader
-				KVFileReaderWriter reader = new KVFileReaderWriter(fname + "_" + i++);
+				KVFileReaderWriter reader = new KVFileReaderWriter(Project.PATH_HDFS + "/" + fname + "_" + i++);
 				reader.open(SizedFileReaderWriter.READ_MODE);
 
 				NetworkReaderWriter writer = tube.getAdapterEntry();
@@ -47,7 +47,8 @@ public class JobLauncher {
 				e.printStackTrace();
 			}
 		}
-
+		mr.reduce(tube, resultsWriter);
+		tube.closeAdapter();
 		// Close the writer of the results
 		resultsWriter.close();
 	}
