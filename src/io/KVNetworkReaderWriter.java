@@ -49,13 +49,14 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
             } else {
                 System.out.println("tjrs ouverte dans KVNetwork");
             }
-            try (ObjectInputStream is = new ObjectInputStream(cs.getInputStream())) {
+            try {
+                ObjectInputStream is = new ObjectInputStream(cs.getInputStream());
                 KV kv =  (KV) is.readObject();
                 System.out.println("succesfully read from inuput stream : " + kv.k);
                 is.close();
                 return kv;
             } catch (ClassNotFoundException | IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
             return null;
         } else {

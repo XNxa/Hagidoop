@@ -30,14 +30,8 @@ public class TestAdapter {
             NetworkReaderWriter writer = adapter.getAdapterEntry();
             writer.openClient();
             writer.write(kv);
+            writer.write(kv);
             writer.write(null);
-            // Attendre avant de fermer ??
-            try {
-                sleep(10000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
             writer.closeClient();
             System.out.println("socket closed by Client TestAdaptater");
         }    
