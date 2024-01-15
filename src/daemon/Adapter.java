@@ -1,5 +1,7 @@
 package daemon;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -31,7 +33,13 @@ public class Adapter implements Reader {
     
     public NetworkReaderWriter getAdapterEntry() {
         new Slave().start();
-        return new KVNetworkReaderWriter("localhost", Project.PORT_ADAPTER);
+        try {
+            return new KVNetworkReaderWriter(InetAddress.getLocalHost().getHostAddress(), Project.PORT_ADAPTER);
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
