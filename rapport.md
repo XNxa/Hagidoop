@@ -14,6 +14,11 @@ fragment qu'il trouve (dans le cas ou l'on aurait plusieurs fragments sur la mê
 envoie un flag au client : 0 si tout s'est bien passé, -1 s'il n'a pas trouvé de fragments, et -2 si le fichier ne peut pas être supprimé.
 
 ### HDFS read
+Le client envoie un flag HDFS_READ, le nom du fichier à lire, avec l'information du numéro de fragment 
+
+## Application 
+
+
 
 
 # Manuel d'utilisation
@@ -59,3 +64,8 @@ On peut vider le dossier créé par HDFS et touts les fichiers qu'il contient po
 ```bash
 bash scripts/clean_hdfs.sh
 ```
+
+# Evalution des performances
+
+Pour un petit fichier (~ 10 mo), avec la méthode basique, on le réalise en moins d'une seconde, alors que la version map/reduce prend 8s : avec un petit fichier l'utilisation de map/reduce n'est pas intéressante 
+
