@@ -18,7 +18,8 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
 
     private enum Opentype {
         SERVER, 
-        CLIENT
+        CLIENT,
+        ACCEPT
     }
 
     private Opentype opentype;
@@ -31,7 +32,7 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
 
     public KVNetworkReaderWriter(Socket s) {
         this.cs = s;
-        opentype = Opentype.CLIENT;
+        opentype = Opentype.ACCEPT;
     }
 
     public KVNetworkReaderWriter(String ip, int port) {
@@ -42,7 +43,7 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
 
     @Override
     public KV read() {
-        if (opentype == Opentype.CLIENT) {
+        if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
             try (ObjectInputStream is = new ObjectInputStream(cs.getInputStream())) {
                 KV kv =  (KV) is.readObject();
                 return kv;
@@ -59,7 +60,7 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
     @Override
     public void write(KV record) {
         System.out.println(record);
-        if (opentype == Opentype.CLIENT) {
+        if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
             try (ObjectOutputStream os = new ObjectOutputStream(cs.getOutputStream())) {
                 os.writeObject(record);
             } catch (Exception e) {
@@ -128,7 +129,7 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
 
     @Override
     public void closeClient() {
-        if (opentype == Opentype.CLIENT) {
+        if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
             try {
                 cs.close();
             } catch (IOException e) {
