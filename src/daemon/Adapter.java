@@ -1,5 +1,6 @@
 package daemon;
 
+import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -22,11 +23,12 @@ public class Adapter implements Reader {
 
     public Adapter () {
         kvQueue = new LinkedBlockingQueue<KV>();
-        servers = new NetworkReaderWriter[n];
+        servers = new KVNetworkReaderWriter[n];
         ports = new int[n];
         for (int i = 0 ; i < n ; i++) {
             ports[i] = Project.PORT_ADAPTER + i;
             servers[i] = new KVNetworkReaderWriter(ports[i]);
+            servers[i].openServer();
         } 
         compteur = 0;
     }
@@ -38,7 +40,7 @@ public class Adapter implements Reader {
     }
     
     public NetworkReaderWriter getAdapterEntry() {
-        new Slave(nextPortIndex).start();
+        new AdapterSlave(nextPortIndex).start();
         return new KVNetworkReaderWriter("localhost", (nextPortIndex++) + Project.PORT_ADAPTER);
     }
 
@@ -62,26 +64,33 @@ public class Adapter implements Reader {
         return null;
     }
 
-    private class Slave extends Thread {
+    private class AdapterSlave extends Thread {
         
         private int portIndex;
 
-        public Slave(int i) {
+        public AdapterSlave(int i) {
             portIndex = i;
         }
 
         @Override
         public void run() {
-            NetworkReaderWriter masocket = servers[portIndex].accept();
+            KVNetworkReaderWriter masocket = (KVNetworkReaderWriter) servers[portIndex].accept();
             KV kv;
+            if (masocket.getSocket().isClosed()) {
+                System.out.println("socket closed..... POURQUOI ???");
+            } else {
+                System.err.println("Socket ouverte au niveau d'adapter");
+            }
             while ((kv = masocket.read()) != null) {
                 try {
+                    System.out.println("Put in the queue the kv of key : " + kv.k );
                     kvQueue.put(kv);
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
+            
             masocket.closeClient();
         }
     }

@@ -44,11 +44,17 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
     @Override
     public KV read() {
         if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
+            if (cs.isClosed()) {
+                System.out.println("Socket devenue fermée dans KVNetwork... ");
+            } else {
+                System.out.println("tjrs ouverte dans KVNetwork");
+            }
             try (ObjectInputStream is = new ObjectInputStream(cs.getInputStream())) {
                 KV kv =  (KV) is.readObject();
+                System.out.println("succesfully read from inuput stream : " + kv.k);
+                is.close();
                 return kv;
             } catch (ClassNotFoundException | IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             return null;
@@ -59,10 +65,10 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
 
     @Override
     public void write(KV record) {
-        System.out.println(record);
         if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
             try (ObjectOutputStream os = new ObjectOutputStream(cs.getOutputStream())) {
                 os.writeObject(record);
+                os.close();
             } catch (Exception e) {
                 // TODO: handle exception
             }
@@ -132,6 +138,7 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
         if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
             try {
                 cs.close();
+                System.out.println(cs + "closed");
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -141,4 +148,7 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
         }
     }
     
+    public Socket getSocket() {
+        return cs;
+    }
 }

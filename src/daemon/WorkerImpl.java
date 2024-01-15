@@ -22,15 +22,15 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker {
 
     @Override
     public void runMap(Map m, FileReaderWriter reader, NetworkReaderWriter writer) throws RemoteException {
-        new Slave(m, reader, writer).start();
+        new WorkerSlave(m, reader, writer).start();
     }
 
-    private class Slave extends Thread {
+    private class WorkerSlave extends Thread {
         Map m;
         FileReaderWriter reader;
         NetworkReaderWriter writer;
 
-        public Slave (Map m, FileReaderWriter reader, NetworkReaderWriter writer) {
+        public WorkerSlave (Map m, FileReaderWriter reader, NetworkReaderWriter writer) {
             this.m = m;            
             this.reader = reader;
             this.writer = writer;            
