@@ -35,7 +35,6 @@ public class JobLauncher {
 
 				// Open the reader
 				KVFileReaderWriter reader = new KVFileReaderWriter(Project.PATH_HDFS + "/" + fname + "_" + i++);
-				reader.open(SizedFileReaderWriter.READ_MODE);
 
 				NetworkReaderWriter writer = tube.getAdapterEntry();
 

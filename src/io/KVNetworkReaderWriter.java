@@ -58,6 +58,7 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
 
     @Override
     public void write(KV record) {
+        System.out.println(record);
         if (opentype == Opentype.CLIENT) {
             try (ObjectOutputStream os = new ObjectOutputStream(cs.getOutputStream())) {
                 os.writeObject(record);

@@ -12,6 +12,7 @@ import interfaces.FileReaderWriter;
 import interfaces.KV;
 import interfaces.Map;
 import interfaces.NetworkReaderWriter;
+import io.SizedFileReaderWriter;
 
 public class WorkerImpl extends UnicastRemoteObject implements Worker {
 
@@ -38,11 +39,14 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker {
         @Override
         public void run() {
             System.out.println("Starting map on this node");
+            reader.open(SizedFileReaderWriter.READ_MODE);
+            writer.openClient();
             m.map(reader, writer);
             System.out.println("Map finished");
             
             // Close the writer and the reader
             reader.close();
+            // End of the map operation : write null to signal
             writer.write(null);
             writer.closeClient();
         }

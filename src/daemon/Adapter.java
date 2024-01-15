@@ -13,25 +13,33 @@ import io.KVNetworkReaderWriter;
 public class Adapter implements Reader {
 
     private BlockingQueue<KV> kvQueue;
-    private NetworkReaderWriter server;
     private int compteur;
     private final int n = (new Config()).getNumberOfWorkers();
+    private NetworkReaderWriter[] servers;
+    private int[] ports;
+    private int nextPortIndex = 0;
 
 
     public Adapter () {
         kvQueue = new LinkedBlockingQueue<KV>();
-        server = new KVNetworkReaderWriter(Project.PORT_ADAPTER);
+        servers = new NetworkReaderWriter[n];
+        ports = new int[n];
+        for (int i = 0 ; i < n ; i++) {
+            ports[i] = Project.PORT_ADAPTER + i;
+            servers[i] = new KVNetworkReaderWriter(ports[i]);
+        } 
         compteur = 0;
     }
 
     public void closeAdapter() {
-        server.closeServer();
+        for (NetworkReaderWriter server : servers) {
+            server.closeServer();
+        }
     }
     
     public NetworkReaderWriter getAdapterEntry() {
-        new Slave().start();
-        
-        return new KVNetworkReaderWriter("localhost", Project.PORT_ADAPTER);
+        new Slave(nextPortIndex).start();
+        return new KVNetworkReaderWriter("localhost", (nextPortIndex++) + Project.PORT_ADAPTER);
     }
 
     @Override
@@ -56,9 +64,15 @@ public class Adapter implements Reader {
 
     private class Slave extends Thread {
         
+        private int portIndex;
+
+        public Slave(int i) {
+            portIndex = i;
+        }
+
         @Override
         public void run() {
-            NetworkReaderWriter masocket = server.accept();
+            NetworkReaderWriter masocket = servers[portIndex].accept();
             KV kv;
             while ((kv = masocket.read()) != null) {
                 try {
