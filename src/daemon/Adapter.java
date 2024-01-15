@@ -39,9 +39,9 @@ public class Adapter implements Reader {
         try {
             KV kv = kvQueue.take();
             
-            if (kv == null && this.compteur >= this.n) {
+            if (kv.v == null && kv.k == null && this.compteur == this.n - 1) {
                 return null;
-            } else if (kv == null) {
+            } else if (kv.v == null && kv.k == null) {
                 this.compteur++;
                 return read();
             } else {
@@ -60,14 +60,15 @@ public class Adapter implements Reader {
         public void run() {
             NetworkReaderWriter masocket = server.accept();
             KV kv;
-            while ((kv = masocket.read()) != null) {
-                try {
+            try {
+                while ((kv = masocket.read()) != null) {
                     kvQueue.put(kv);
-                } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
                 }
-            }
+                kvQueue.put(new KV(null, null));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (NullPointerException e) {}
             masocket.closeClient();
         }
     }

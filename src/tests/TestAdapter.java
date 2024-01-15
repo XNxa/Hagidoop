@@ -16,6 +16,11 @@ public class TestAdapter {
         System.out.println("!!!! READ : " + adapter.read());
         System.out.println("!!!! READ : " + adapter.read());
         System.out.println("!!!! READ : " + adapter.read());
+        System.out.println("!!!! READ : " + adapter.read());
+        System.out.println("!!!! READ : " + adapter.read());
+        System.out.println("!!!! READ : " + adapter.read());
+        System.out.println("!!!! READ : " + adapter.read());
+        System.out.println("!!!! READ : " + adapter.read());
     }
 
     private static class Client extends Thread {
@@ -33,7 +38,6 @@ public class TestAdapter {
             writer.write(kv);
             writer.write(null);
             writer.closeClient();
-            System.out.println("socket closed by Client TestAdaptater");
         }    
     }  
 

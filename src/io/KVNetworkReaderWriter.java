@@ -15,6 +15,8 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
     private int serverPort;
     private ServerSocket ss;
     private Socket cs;
+    private ObjectInputStream is = null;
+    private ObjectOutputStream os = null;
 
     private enum Opentype {
         SERVER, 
@@ -44,19 +46,14 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
     @Override
     public KV read() {
         if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
-            if (cs.isClosed()) {
-                System.out.println("Socket devenue fermée dans KVNetwork... ");
-            } else {
-                System.out.println("tjrs ouverte dans KVNetwork");
-            }
             try {
-                ObjectInputStream is = new ObjectInputStream(cs.getInputStream());
+                if (is == null) {
+                    is = new ObjectInputStream(cs.getInputStream());
+                }
                 KV kv =  (KV) is.readObject();
-                System.out.println("succesfully read from inuput stream : " + kv.k);
-                is.close();
                 return kv;
             } catch (ClassNotFoundException | IOException e) {
-                //e.printStackTrace();
+                e.printStackTrace();
             }
             return null;
         } else {
@@ -67,11 +64,15 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
     @Override
     public void write(KV record) {
         if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
-            try (ObjectOutputStream os = new ObjectOutputStream(cs.getOutputStream())) {
+            try {
+                if (os == null) {
+                    os = new ObjectOutputStream(cs.getOutputStream());
+                }
                 os.writeObject(record);
-                os.close();
+                //os.close();
             } catch (Exception e) {
                 // TODO: handle exception
+                e.printStackTrace();
             }
         } else {
             throw new UnsupportedOperationException("You can't use the method write on a server.");
@@ -138,8 +139,13 @@ public class KVNetworkReaderWriter implements NetworkReaderWriter {
     public void closeClient() {
         if (opentype == Opentype.CLIENT || opentype == Opentype.ACCEPT) {
             try {
+                if (is != null) {
+                    is.close();
+                }
+                if (os != null) {
+                    os.close();
+                }
                 cs.close();
-                System.out.println(cs + "closed");
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
