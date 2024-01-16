@@ -4,14 +4,15 @@ import daemon.Adapter;
 import interfaces.KV;
 import interfaces.NetworkReaderWriter;
 
+/* Classe pour tester le comportement de l'adapter. */
 public class TestAdapter {
     
     public static void main(String[] args) {
         Adapter adapter = new Adapter();
-        new Client(adapter, new KV("1", "envie de mourir")).start();
-        new Client(adapter, new KV("2", "caca")).start();
-        new Client(adapter, new KV("3", "ouaiouai")).start();
-        new Client(adapter, new KV("4", "bzbzbzbz")).start();
+        new Client(adapter, new KV("1", "Mon premier kv")).start();
+        new Client(adapter, new KV("2", "Mon deuxieme kv")).start();
+        new Client(adapter, new KV("3", "Mon troisème kv")).start();
+        new Client(adapter, new KV("4", "Mon quatrième kv")).start();
         System.out.println("!!!! READ : " + adapter.read());
         System.out.println("!!!! READ : " + adapter.read());
         System.out.println("!!!! READ : " + adapter.read());

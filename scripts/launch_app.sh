@@ -22,8 +22,8 @@ while read -r line; do
         echo "java -cp bin daemon.WorkerImpl $workerPort &> $wLogs" | bash &
     else
         # TODO: start ssh connection, launch the server.
-        echo "ssh $machine "java -cp /home/xnaxara/Annee_2/PDR/bin hdfs.HdfsServer $port" &> $logs" | bash &
-        echo "ssh $machine "java -cp /home/xnaxara/Annee_2/PDR/bin daemon.WorkerImpl $workerPort" &> $wLogs" | bash &
+        echo "ssh $machine "java -cp /home/vmouttea/annee2/PDR/bin hdfs.HdfsServer $port" &> $logs" | bash &
+        echo "ssh $machine "java -cp /home/xnaxara/annee2/PDR/bin daemon.WorkerImpl $workerPort" &> $wLogs" | bash &
     fi
 
 done < $1

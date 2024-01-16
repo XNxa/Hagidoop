@@ -1,4 +1,4 @@
 #!/bin/bash
 
-bash scripts/shutdown_servers.sh $1
-bash scripts/deploy_servers.sh $1
+bash scripts/shutdown_hdfs.sh $1
+bash scripts/launch_hdfs.sh $1

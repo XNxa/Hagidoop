@@ -4,6 +4,7 @@ import interfaces.KV;
 import interfaces.NetworkReaderWriter;
 import io.KVNetworkReaderWriter;
 
+/* Classe client pour tester le comportement de KVNetworkReaderWriter. */
 public class TestClient {
 
     public static void main(String[] args) {

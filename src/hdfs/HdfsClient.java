@@ -108,13 +108,14 @@ public class HdfsClient {
 					kv = rw.read();
 					bytesSent += rw.size(kv);
 					os.writeObject(kv);
+					os.reset();
 				}
 
 				os.writeObject(null);
 				os.close();
 
 			} catch (Exception e) {
-				// TODO: Valentin ... ???
+				//e.printStackTrace();
 			}
 			i++;
 		}
